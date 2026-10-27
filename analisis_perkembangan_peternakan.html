@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analisis Perkembangan Peternakan</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f4f7f5;color:#1f2937}
+    .container{max-width:1100px;margin:auto;padding:24px}
+    h1{text-align:center;color:#166534}
+    .card{background:white;border-radius:14px;padding:20px;margin:18px 0;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border:1px solid #ddd;text-align:center}
+    th{background:#166534;color:white}
+    input{width:90px;padding:7px;border:1px solid #bbb;border-radius:6px}
+    button{background:#166534;color:white;border:0;padding:11px 18px;border-radius:8px;cursor:pointer;margin:6px 3px}
+    button:hover{background:#14532d}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .stat{background:#ecfdf5;padding:16px;border-radius:10px;text-align:center}
+    .stat strong{display:block;font-size:24px;color:#166534;margin-top:5px}
+    canvas{max-height:420px}
+    .note{font-size:14px;color:#6b7280}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}input{width:70px}}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🐄 Analisis Perkembangan Peternakan</h1>
+  <p style="text-align:center">Dashboard sederhana untuk melihat perubahan populasi ternak dan produksi peternakan.</p>
+
+  <div class="card">
+    <h2>1. Masukkan Data</h2>
+    <p class="note">Data di bawah adalah CONTOH/DEMONSTRASI. Ganti dengan data resmi yang kamu gunakan untuk tugas.</p>
+    <table id="dataTable">
+      <thead>
+        <tr><th>Tahun</th><th>Populasi Sapi</th><th>Produksi Daging</th><th>Produksi Telur</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><input value="2020" type="number"></td><td><input value="100" type="number"></td><td><input value="80" type="number"></td><td><input value="70" type="number"></td></tr>
+        <tr><td><input value="2021" type="number"></td><td><input value="105" type="number"></td><td><input value="84" type="number"></td><td><input value="74" type="number"></td></tr>
+        <tr><td><input value="2022" type="number"></td><td><input value="112" type="number"></td><td><input value="89" type="number"></td><td><input value="79" type="number"></td></tr>
+        <tr><td><input value="2023" type="number"></td><td><input value="120" type="number"></td><td><input value="95" type="number"></td><td><input value="85" type="number"></td></tr>
+        <tr><td><input value="2024" type="number"></td><td><input value="128" type="number"></td><td><input value="103" type="number"></td><td><input value="92" type="number"></td></tr>
+      </tbody>
+    </table>
+    <button onclick="tambahBaris()">+ Tambah Tahun</button>
+    <button onclick="analisis()">🔎 Analisis Data</button>
+  </div>
+
+  <div class="card">
+    <h2>2. Hasil Analisis</h2>
+    <div class="grid">
+      <div class="stat">Pertumbuhan Populasi<strong id="popGrowth">-</strong></div>
+      <div class="stat">Pertumbuhan Daging<strong id="meatGrowth">-</strong></div>
+      <div class="stat">Pertumbuhan Telur<strong id="eggGrowth">-</strong></div>
+    </div>
+    <p id="kesimpulan" style="margin-top:18px"></p>
+  </div>
+
+  <div class="card">
+    <h2>3. Grafik Perkembangan</h2>
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="card">
+    <h2>4. Cara Membaca Hasil</h2>
+    <ul>
+      <li>Jika nilai pertumbuhan positif, indikator mengalami peningkatan dibanding tahun awal.</li>
+      <li>Jika nilainya negatif, indikator mengalami penurunan.</li>
+      <li>Grafik membantu melihat pola perkembangan dari waktu ke waktu.</li>
+      <li>Untuk tugas, jelaskan satuan setiap data sesuai sumber aslinya.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+let chart;
+
+function ambilData(){
+  const rows = [...document.querySelectorAll("#dataTable tbody tr")];
+  return rows.map(row => {
+    const inputs = [...row.querySelectorAll("input")];
+    return {
+      tahun: Number(inputs[0].value),
+      populasi: Number(inputs[1].value),
+      daging: Number(inputs[2].value),
+      telur: Number(inputs[3].value)
+    };
+  }).filter(x => x.tahun && !isNaN(x.populasi) && !isNaN(x.daging) && !isNaN(x.telur))
+   .sort((a,b)=>a.tahun-b.tahun);
+}
+
+function persen(awal, akhir){
+  if(awal === 0) return 0;
+  return ((akhir-awal)/awal)*100;
+}
+
+function analisis(){
+  const data = ambilData();
+  if(data.length < 2){
+    alert("Masukkan minimal 2 tahun data.");
+    return;
+  }
+
+  const awal=data[0], akhir=data[data.length-1];
+  const pop=persen(awal.populasi,akhir.populasi);
+  const meat=persen(awal.daging,akhir.daging);
+  const egg=persen(awal.telur,akhir.telur);
+
+  document.getElementById("popGrowth").textContent=pop.toFixed(2)+"%";
+  document.getElementById("meatGrowth").textContent=meat.toFixed(2)+"%";
+  document.getElementById("eggGrowth").textContent=egg.toFixed(2)+"%";
+
+  document.getElementById("kesimpulan").innerHTML =
+    `Dari tahun <b>${awal.tahun}</b> sampai <b>${akhir.tahun}</b>, ` +
+    `populasi sapi berubah sebesar <b>${pop.toFixed(2)}%</b>, ` +
+    `produksi daging sebesar <b>${meat.toFixed(2)}%</b>, dan ` +
+    `produksi telur sebesar <b>${egg.toFixed(2)}%</b>. ` +
+    `Gunakan data resmi dan satuannya untuk membuat kesimpulan akhir tugas.`;
+
+  const ctx=document.getElementById("chart");
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{
+    type:"line",
+    data:{
+      labels:data.map(x=>x.tahun),
+      datasets:[
+        {label:"Populasi Sapi",data:data.map(x=>x.populasi),tension:.25},
+        {label:"Produksi Daging",data:data.map(x=>x.daging),tension:.25},
+        {label:"Produksi Telur",data:data.map(x=>x.telur),tension:.25}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:"bottom"}},
+      scales:{y:{beginAtZero:true}}
+    }
+  });
+}
+
+function tambahBaris(){
+  const tbody=document.querySelector("#dataTable tbody");
+  const lastYear=ambilData().at(-1)?.tahun || 2024;
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td><input value="${lastYear+1}" type="number"></td>
+    <td><input value="0" type="number"></td>
+    <td><input value="0" type="number"></td>
+    <td><input value="0" type="number"></td>`;
+  tbody.appendChild(tr);
+}
+
+analisis();
+</script>
+</body>
+</html>
